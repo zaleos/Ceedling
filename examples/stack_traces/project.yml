@@ -1,0 +1,40 @@
+---
+
+:project:
+  :use_exceptions: FALSE
+  :use_test_preprocessor: TRUE
+  :use_auxiliary_dependencies: TRUE
+  :build_root: build
+  :release_build: TRUE
+  :test_file_prefix: test_
+
+:paths:
+  :test:
+    - +:test/**
+  :source:
+    - src/**
+
+:defines:
+  # in order to add common defines:
+  #  1) remove the trailing [] from the :common: section
+  #  2) add entries to the :common: section (e.g. :test: has TEST defined)
+  :commmon: &common_defines []
+  :test:
+    - *common_defines
+    - TEST
+  :test_preprocess:
+    - *common_defines
+    - TEST
+
+#:tools:
+# Ceedling defaults to using gcc for compiling, linking, etc.
+# As [:tools] is blank, gcc will be used (so long as it's in your system path)
+# See documentation to configure a given toolchain for use
+
+:plugins:
+  :load_paths:
+    - ../../plugins
+  :enabled:
+    - stdout_pretty_tests_report
+    - module_generator
+...

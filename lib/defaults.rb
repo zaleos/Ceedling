@@ -1,7 +1,11 @@
 require 'constants'
 require 'system_wrapper'
 require 'file_path_utils'
+require 'rbconfig'
 
+def is_windows?
+  (RbConfig::CONFIG['host_os'] =~ /mswin|mingw|cygwin/)
+end
 
 DEFAULT_TEST_COMPILER_TOOL = {
   :executable => FilePathUtils.os_executable_ext('gcc').freeze,
@@ -14,7 +18,9 @@ DEFAULT_TEST_COMPILER_TOOL = {
     {"-I\"$\"" => 'COLLECTION_PATHS_TEST_TOOLCHAIN_INCLUDE'}.freeze,
     {"-D$" => 'COLLECTION_DEFINES_TEST_AND_VENDOR'}.freeze,
     "-DGNU_COMPILER".freeze,
+    "-DUNITY_ENABLE_STACKTRACE".freeze,
     "-c \"${1}\"".freeze,
+    "-g".freeze,
     "-o \"${2}\"".freeze,
     # gcc's list file output options are complex; no use of ${3} parameter in default config    
     ].freeze
@@ -28,8 +34,11 @@ DEFAULT_TEST_LINKER_TOOL = {
   :optional => false.freeze,
   :arguments => [
     "\"${1}\"".freeze,
+    "-g".freeze,
+    is_windows? ? "-limagehlp".freeze : nil,
+    "-fno-pie".freeze,
     "-o \"${2}\"".freeze,
-    ].freeze
+    ].compact.freeze
   }
   
 DEFAULT_TEST_FIXTURE_TOOL = {
