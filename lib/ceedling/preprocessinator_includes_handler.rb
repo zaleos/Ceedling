@@ -56,11 +56,18 @@ class PreprocessinatorIncludesHandler
   #
   # === Return
   # _Array_ of _String_:: Array of the direct dependencies for the source file.
-  def extract_shallow_includes(make_rule)
+  def extract_shallow_includes(make_rule, ignore_list = [])
     # Extract the dependencies from the make rule
     hdr_ext = @configurator.extension_header
     dependencies = make_rule.split.find_all {|path| path.end_with?(hdr_ext) }.uniq
     dependencies.map! {|hdr| hdr.gsub('\\','/') }
+
+    if ignore_list.length > 0
+      # puts("XXX make_rule:\n************\n#{make_rule}\n***********")
+      # puts("XXX before [dependencies=#{dependencies}]\n[ignore_list=#{ignore_list}]")
+      dependencies -= ignore_list
+      # puts("XXX after [dependencies=#{dependencies}]")
+    end
 
     # Separate the real files form the annotated ones and remove the '@@@@'
     annotated_headers, real_headers = dependencies.partition {|hdr| hdr =~ /^@@@@/ }
@@ -69,6 +76,8 @@ class PreprocessinatorIncludesHandler
     # Find which of our annotated headers are "real" dependencies. This is
     # intended to weed out dependencies that have been removed due to build
     # options defined in the project yaml and/or in the headers themselves.
+    # puts("XXX before: [real_headers=#{real_headers}]")
+    removed_headers = []
     list = annotated_headers.find_all do |annotated_header|
       # find the index of the "real" include that matches the annotated one.
       idx = real_headers.find_index do |real_header|
@@ -78,14 +87,36 @@ class PreprocessinatorIncludesHandler
       # otherwise return nil. Since nil is falsy this has the effect of making
       # find_all return only the annotated headers for which a real include was
       # found/deleted
+      # puts("XXX [annotated_header=#{annotated_header}] : [idx=#{idx}]")
+      if idx != nil
+        removed_headers << real_headers[idx]
+      end
       idx ? real_headers.delete_at(idx) : nil
     end.compact
+    # puts("XXX after: [list=#{list}][removed_headers=#{removed_headers}]")
 
     # Extract direct dependencies that were also added
     src_ext = @configurator.extension_source
     sdependencies = make_rule.split.find_all {|path| path.end_with?(src_ext) }.uniq
     sdependencies.map! {|hdr| hdr.gsub('\\','/') }
     list += sdependencies
+
+    # XXX TOBY
+    deep = @configurator.project_config_hash.has_key?(:project_auto_link_deep_dependencies) && @configurator.project_config_hash[:project_auto_link_deep_dependencies]
+    if deep
+      # puts("TODO: IMPLEMENT DEEP LINK LOGIC...") # XXX
+      # Find corresponding source files from removed header files (if they exist):
+      removed_headers.find_all do |removed_header|
+        source_file = removed_header.delete_suffix(hdr_ext) + src_ext
+        # puts("XXX [source_file=#{source_file}]")
+        if File.exist?(source_file)
+          # puts("XXX Yes! It Exists!")
+          other_make_rule = self.form_shallow_dependencies_rule(source_file)
+          other_deps = self.extract_shallow_includes(other_make_rule, removed_headers + real_headers)
+          list += other_deps
+        end
+      end
+    end
 
     list
   end
