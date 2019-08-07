@@ -201,6 +201,28 @@ describe PreprocessinatorIncludesHandler do
   end
 
   context 'invoke_shallow_includes_list' do
+    it 'should do a recursive call when deep dependency linking is enabled' do
+      # create test state/variables
+      # mocks/stubs/expected calls
+      expect(@configurator).to receive(:extension_header).and_return('.h').twice
+      expect(@configurator).to receive(:extension_source).and_return('.c').twice
+      expect(@configurator).to receive(:project_config_hash).and_return({ :project_auto_link_deep_dependencies => true }).exactly(4).times
+      allow(File).to receive(:exist?).with("source/a.c").and_return(true)
+      allow(File).to receive(:exist?).with("source/b.c").and_return(false)
+      allow(subject).to receive(:form_shallow_dependencies_rule).with("source/a.c").and_return("dummy.o: source/b.h @@@@b.h")
+
+      # execute method
+      results = subject.extract_shallow_includes(\
+        '_test_a.o: '\
+          'source\a.h '\
+          '@@@@a.h')
+
+      # validate results
+      expect(results).to eq ['a.h', 'b.h']
+    end
+  end
+
+  context 'invoke_shallow_includes_list' do
     it 'should invoke the rake task which will build included files' do
       # create test state/variables
       # mocks/stubs/expected calls
