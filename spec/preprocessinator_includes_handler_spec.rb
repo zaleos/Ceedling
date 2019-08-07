@@ -67,6 +67,7 @@ describe PreprocessinatorIncludesHandler do
       # mocks/stubs/expected calls
       expect(@configurator).to receive(:extension_header).and_return('.h')
       expect(@configurator).to receive(:extension_source).and_return('.c')
+      expect(@configurator).to receive(:project_config_hash).and_return({ :project_auto_link_deep_dependencies => false }).twice
       # execute method
       results = subject.extract_shallow_includes(%q{
         _test_DUMMY.o: Build/temp/_test_DUMMY.c \
@@ -89,6 +90,7 @@ describe PreprocessinatorIncludesHandler do
       # mocks/stubs/expected calls
       expect(@configurator).to receive(:extension_header).and_return('.h')
       expect(@configurator).to receive(:extension_source).and_return('.c')
+      expect(@configurator).to receive(:project_config_hash).and_return({ :project_auto_link_deep_dependencies => false }).twice
       # execute method
       results = subject.extract_shallow_includes(%q{
         _test_DUMMY.o: Build/temp/_test_DUMMY.c \
@@ -111,6 +113,7 @@ describe PreprocessinatorIncludesHandler do
       # mocks/stubs/expected calls
       expect(@configurator).to receive(:extension_header).and_return('.h')
       expect(@configurator).to receive(:extension_source).and_return('.c')
+      expect(@configurator).to receive(:project_config_hash).and_return({ :project_auto_link_deep_dependencies => false }).twice
       # execute method
       results = subject.extract_shallow_includes(%q{
         _test_DUMMY.o: Build/temp/_test_DUMMY.c \
@@ -136,6 +139,7 @@ describe PreprocessinatorIncludesHandler do
       # mocks/stubs/expected calls
       expect(@configurator).to receive(:extension_header).and_return('.h')
       expect(@configurator).to receive(:extension_source).and_return('.c')
+      expect(@configurator).to receive(:project_config_hash).and_return({ :project_auto_link_deep_dependencies => false }).twice
       # execute method
       results = subject.extract_shallow_includes(%q{
         _test_DUMMY.o: Build/temp/_test_DUMMY.c \
@@ -152,6 +156,7 @@ describe PreprocessinatorIncludesHandler do
       # mocks/stubs/expected calls
       expect(@configurator).to receive(:extension_header).and_return('.h')
       expect(@configurator).to receive(:extension_source).and_return('.c')
+      expect(@configurator).to receive(:project_config_hash).and_return({ :project_auto_link_deep_dependencies => false }).twice
       # execute method
       results = subject.extract_shallow_includes(%q{
         _test_DUMMY.o: Build/temp/_test_DUMMY.c \
