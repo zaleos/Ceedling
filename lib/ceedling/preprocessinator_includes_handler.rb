@@ -62,11 +62,30 @@ class PreprocessinatorIncludesHandler
     dependencies = make_rule.split.find_all {|path| path.end_with?(hdr_ext) }.uniq
     dependencies.map! {|hdr| hdr.gsub('\\','/') }
 
+    mock_headers = []
     if ignore_list.length > 0
+      # puts("XXX found ignore list. Processing start... {{{")
       # puts("XXX make_rule:\n************\n#{make_rule}\n***********")
-      # puts("XXX before [dependencies=#{dependencies}]\n[ignore_list=#{ignore_list}]")
-      dependencies -= ignore_list
+      # puts("XXX before [dependencies=#{dependencies}]")
+      # puts("XXX before [ignore_list=#{ignore_list}]")
+
+      mock_headers, processed_ignore_list = ignore_list.partition {|hdr| hdr =~ /^mock_/ }
+      # puts("XXX [mock_headers=#{mock_headers}]")
+      # puts("XXX before [processed_ignore_list=#{processed_ignore_list}]")
+      stripped_mocked_list = mock_headers.map { |hdr| hdr.delete_prefix("mock_") }
+      processed_ignore_list += stripped_mocked_list
+      # puts("XXX after [processed_ignore_list=#{processed_ignore_list}]")
+      
+      dependencies -= processed_ignore_list
       # puts("XXX after [dependencies=#{dependencies}]")
+      # puts("XXX now remove dependencies that are going to be mocked...")
+      new_dependencies = dependencies.select do |d|
+        bn = File.basename(d)
+        !stripped_mocked_list.include?(bn)
+      end
+      # puts("XXX after [new_dependencies=#{new_dependencies}]")
+      dependencies = new_dependencies
+      # puts("XXX finished processing ignore list. }}}")
     end
 
     # Separate the real files form the annotated ones and remove the '@@@@'
@@ -87,7 +106,6 @@ class PreprocessinatorIncludesHandler
       # otherwise return nil. Since nil is falsy this has the effect of making
       # find_all return only the annotated headers for which a real include was
       # found/deleted
-      # puts("XXX [annotated_header=#{annotated_header}] : [idx=#{idx}]")
       if idx != nil
         removed_headers << real_headers[idx]
       end
@@ -101,18 +119,19 @@ class PreprocessinatorIncludesHandler
     sdependencies.map! {|hdr| hdr.gsub('\\','/') }
     list += sdependencies
 
-    # XXX TOBY
     deep = @configurator.project_config_hash.has_key?(:project_auto_link_deep_dependencies) && @configurator.project_config_hash[:project_auto_link_deep_dependencies]
     if deep
-      # puts("TODO: IMPLEMENT DEEP LINK LOGIC...") # XXX
       # Find corresponding source files from removed header files (if they exist):
       removed_headers.find_all do |removed_header|
         source_file = removed_header.delete_suffix(hdr_ext) + src_ext
         # puts("XXX [source_file=#{source_file}]")
         if File.exist?(source_file)
-          # puts("XXX Yes! It Exists!")
+          # puts("XXX source file exists: start recursive call: {{{")
           other_make_rule = self.form_shallow_dependencies_rule(source_file)
-          other_deps = self.extract_shallow_includes(other_make_rule, removed_headers + real_headers)
+          other_deps = self.extract_shallow_includes(other_make_rule, removed_headers + real_headers + mock_headers)
+          # puts("XXX recursive call end.")
+          # puts("XXX [other_deps=#{other_deps}]")
+          # puts("XXX }}}")
           list += other_deps
         end
       end
