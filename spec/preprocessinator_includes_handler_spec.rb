@@ -179,6 +179,28 @@ describe PreprocessinatorIncludesHandler do
   end
 
   context 'invoke_shallow_includes_list' do
+    it 'should ignore files in ignore_list param' do
+      # create test state/variables
+      # mocks/stubs/expected calls
+      expect(@configurator).to receive(:extension_header).and_return('.h')
+      expect(@configurator).to receive(:extension_source).and_return('.c')
+      expect(@configurator).to receive(:project_config_hash).and_return({ :project_auto_link_deep_dependencies => false }).twice
+      # execute method
+      results = subject.extract_shallow_includes(\
+        '_test_DUMMY.o: '\
+          'source\some_header1.h '\
+          'source\some_header2.h '\
+          '@@@@some_header1.h '\
+          '@@@@some_header2.h '\
+          '@@@@some_header3.h '\
+          'source\some_header3.h'\
+      , ["source/some_header1.h", "mock_some_header2.h"])
+      # validate results
+      expect(results).to eq ['some_header3.h']
+    end
+  end
+
+  context 'invoke_shallow_includes_list' do
     it 'should invoke the rake task which will build included files' do
       # create test state/variables
       # mocks/stubs/expected calls
