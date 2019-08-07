@@ -104,8 +104,7 @@ class PreprocessinatorIncludesHandler
     sdependencies.map! {|hdr| hdr.gsub('\\','/') }
     list += sdependencies
 
-    deep = @configurator.project_config_hash.has_key?(:project_auto_link_deep_dependencies) && @configurator.project_config_hash[:project_auto_link_deep_dependencies]
-    if deep
+    if @configurator.project_config_hash.has_key?(:project_auto_link_deep_dependencies) && @configurator.project_config_hash[:project_auto_link_deep_dependencies]
       # Find corresponding source files from removed header files (if they exist):
       removed_headers.find_all do |removed_header|
         source_file = removed_header.delete_suffix(hdr_ext) + src_ext
