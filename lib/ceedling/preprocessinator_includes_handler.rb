@@ -56,7 +56,7 @@ class PreprocessinatorIncludesHandler
   #
   # === Return
   # _Array_ of _String_:: Array of the direct dependencies for the source file.
-  def extract_shallow_includes(make_rule, ignore_list = [])
+  def extract_includes(make_rule, ignore_list = [])
     # Extract the dependencies from the make rule
     hdr_ext = @configurator.extension_header
     dependencies = make_rule.split.find_all {|path| path.end_with?(hdr_ext) }.uniq
@@ -110,7 +110,7 @@ class PreprocessinatorIncludesHandler
         source_file = removed_header.delete_suffix(hdr_ext) + src_ext
         if File.exist?(source_file)
           other_make_rule = self.form_shallow_dependencies_rule(source_file)
-          other_deps = self.extract_shallow_includes(other_make_rule, removed_headers + real_headers + mock_headers)
+          other_deps = self.extract_includes(other_make_rule, removed_headers + real_headers + mock_headers)
           list += other_deps
         end
       end
