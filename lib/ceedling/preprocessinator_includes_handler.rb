@@ -110,13 +110,14 @@ class PreprocessinatorIncludesHandler
         source_file = removed_header.delete_suffix(hdr_ext) + src_ext
         if File.exist?(source_file)
           other_make_rule = self.form_shallow_dependencies_rule(source_file)
-          other_deps = self.extract_includes(other_make_rule, removed_headers + real_headers + mock_headers)
+          other_deps, ignore_list = self.extract_includes(other_make_rule, ignore_list + removed_headers + real_headers + mock_headers)
           list += other_deps
+          ignore_list << removed_header
         end
       end
     end
 
-    list
+    return list, ignore_list
   end
 
   def write_shallow_includes_list(filepath, list)

@@ -69,7 +69,7 @@ describe PreprocessinatorIncludesHandler do
       expect(@configurator).to receive(:extension_source).and_return('.c')
       expect(@configurator).to receive(:project_config_hash).and_return({ :project_auto_link_deep_dependencies => false }).twice
       # execute method
-      results = subject.extract_includes(%q{
+      results, _ = subject.extract_includes(%q{
         _test_DUMMY.o: Build/temp/_test_DUMMY.c \
           source/some_header1.h \
           source/some_lib/some_header2.h \
@@ -92,7 +92,7 @@ describe PreprocessinatorIncludesHandler do
       expect(@configurator).to receive(:extension_source).and_return('.c')
       expect(@configurator).to receive(:project_config_hash).and_return({ :project_auto_link_deep_dependencies => false }).twice
       # execute method
-      results = subject.extract_includes(%q{
+      results, _ = subject.extract_includes(%q{
         _test_DUMMY.o: Build/temp/_test_DUMMY.c \
           source/some_header1.h \
           source/some_lib/some_header2.h \
@@ -115,7 +115,7 @@ describe PreprocessinatorIncludesHandler do
       expect(@configurator).to receive(:extension_source).and_return('.c')
       expect(@configurator).to receive(:project_config_hash).and_return({ :project_auto_link_deep_dependencies => false }).twice
       # execute method
-      results = subject.extract_includes(%q{
+      results, _ = subject.extract_includes(%q{
         _test_DUMMY.o: Build/temp/_test_DUMMY.c \
           source\some_header1.h \
           source\some_lib\some_header2.h \
@@ -141,7 +141,7 @@ describe PreprocessinatorIncludesHandler do
       expect(@configurator).to receive(:extension_source).and_return('.c')
       expect(@configurator).to receive(:project_config_hash).and_return({ :project_auto_link_deep_dependencies => false }).twice
       # execute method
-      results = subject.extract_includes(%q{
+      results, _ = subject.extract_includes(%q{
         _test_DUMMY.o: Build/temp/_test_DUMMY.c \
           source/some_header1.h \
           @@@@some_header1.h \
@@ -158,7 +158,7 @@ describe PreprocessinatorIncludesHandler do
       expect(@configurator).to receive(:extension_source).and_return('.c')
       expect(@configurator).to receive(:project_config_hash).and_return({ :project_auto_link_deep_dependencies => false }).twice
       # execute method
-      results = subject.extract_includes(%q{
+      results, _ = subject.extract_includes(%q{
         _test_DUMMY.o: Build/temp/_test_DUMMY.c \
           source\some_header1.h \
           source\some_lib\some_header2.h \
@@ -186,7 +186,7 @@ describe PreprocessinatorIncludesHandler do
       expect(@configurator).to receive(:extension_source).and_return('.c')
       expect(@configurator).to receive(:project_config_hash).and_return({ :project_auto_link_deep_dependencies => false }).twice
       # execute method
-      results = subject.extract_includes(\
+      results, _ = subject.extract_includes(\
         '_test_DUMMY.o: '\
           'source\some_header1.h '\
           'source\some_header2.h '\
@@ -212,7 +212,7 @@ describe PreprocessinatorIncludesHandler do
       allow(subject).to receive(:form_shallow_dependencies_rule).with("source/a.c").and_return("dummy.o: source/b.h @@@@b.h")
 
       # execute method
-      results = subject.extract_includes(\
+      results, _ = subject.extract_includes(\
         '_test_a.o: '\
           'source\a.h '\
           '@@@@a.h')
