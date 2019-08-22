@@ -56,7 +56,7 @@ class PreprocessinatorIncludesHandler
   #
   # === Return
   # _Array_ of _String_:: Array of the direct dependencies for the source file.
-  def extract_shallow_includes(make_rule)
+  def extract_shallow_includes(make_rule, ignore_list = [])
     # Extract the dependencies from the make rule
     hdr_ext = @configurator.extension_header
     dependencies = make_rule.split.find_all {|path| path.end_with?(hdr_ext) }.uniq
@@ -65,6 +65,27 @@ class PreprocessinatorIncludesHandler
     # Separate the real files form the annotated ones and remove the '@@@@'
     annotated_headers, real_headers = dependencies.partition {|hdr| hdr =~ /^@@@@/ }
     annotated_headers.map! {|hdr| hdr.gsub('@@@@','') }
+    # annotated headers will contain full path
+    annotated_headers.map! {|hdr| real_headers.find {|real_hdr| !real_hdr.match(/(.*\/)?#{Regexp.escape(hdr)}/).nil? } }
+    annotated_headers = annotated_headers.select {|hdr| !hdr.nil? }
+
+
+    #########
+    #
+    #  NEW STUFF
+    #
+    #########
+
+    mocks = annotated_headers.find_all do |annotated_header|
+      File.basename(annotated_header) =~ /^mock_.*$/
+    end.compact
+
+    headers_to_deep_link = []
+    annotated_headers.each do |annotated_header|
+      if !(mocks.include? annotated_header) and (annotated_header.match(/^(.*\/)?unity\.h$/).nil?)
+        headers_to_deep_link << annotated_header
+      end
+    end
 
     # Find which of our annotated headers are "real" dependencies. This is
     # intended to weed out dependencies that have been removed due to build
@@ -87,7 +108,50 @@ class PreprocessinatorIncludesHandler
     sdependencies.map! {|hdr| hdr.gsub('\\','/') }
     list += sdependencies
 
-    list
+    #########
+    #
+    #  NEW STUFF
+    #
+    #########
+
+    mocks.each do |mock|
+      dirname = File.dirname(mock)
+      basename = File.basename(mock).delete_prefix("mock_")
+      if dirname != "."
+        ignore_list << File.join(dirname, basename)
+      else
+        ignore_list << basename
+      end
+
+    end.compact
+
+    list = list.select do |item|
+      mocks.include? item or !(ignore_list.any? { |ignore_item| !item.match(/^(.*\/)?#{Regexp.escape(ignore_item)}$/).nil? })
+    end
+
+    # new_list = []
+    # list.each do |item|
+    #   mocks_include = mocks.include? item
+    #   in_ignore = ignore_list.any? { |ignore_item| item.match(/^.*#{Regexp.escape(ignore_item)}$/) }
+    #   if mocks_include or !in_ignore
+    #     new_list << item
+    #   end
+    # end
+
+    headers_to_deep_link.each do |header_to_deep_link|
+      if ignore_list.find { |ignore_header| header_to_deep_link.match(/^(.*\/)?#{Regexp.escape(ignore_header)}$/) }.nil?
+      # if !ignore_list.include?(header_to_deep_link)
+        ignore_list << header_to_deep_link
+        source_file = header_to_deep_link.delete_suffix(hdr_ext) + src_ext
+        if File.exist?(source_file)
+          other_make_rule = self.form_shallow_dependencies_rule(source_file)
+          other_deps, ignore_list = self.extract_shallow_includes(other_make_rule, ignore_list)
+          list += other_deps
+        end
+      end
+    end
+
+    return list, ignore_list
   end
 
   def write_shallow_includes_list(filepath, list)
