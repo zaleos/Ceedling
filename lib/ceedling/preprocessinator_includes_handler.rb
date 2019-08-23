@@ -65,27 +65,10 @@ class PreprocessinatorIncludesHandler
     # Separate the real files form the annotated ones and remove the '@@@@'
     annotated_headers, real_headers = dependencies.partition {|hdr| hdr =~ /^@@@@/ }
     annotated_headers.map! {|hdr| hdr.gsub('@@@@','') }
-    # annotated headers will contain full path
+    # Matching annotated_headers values against real_headers to ensure that
+    # annotated_headers contain full path entries (as returned by make rule)
     annotated_headers.map! {|hdr| real_headers.find {|real_hdr| !real_hdr.match(/(.*\/)?#{Regexp.escape(hdr)}/).nil? } }
     annotated_headers = annotated_headers.select {|hdr| !hdr.nil? }
-
-
-    #########
-    #
-    #  NEW STUFF
-    #
-    #########
-
-    mocks = annotated_headers.find_all do |annotated_header|
-      File.basename(annotated_header) =~ /^mock_.*$/
-    end.compact
-
-    headers_to_deep_link = []
-    annotated_headers.each do |annotated_header|
-      if !(mocks.include? annotated_header) and (annotated_header.match(/^(.*\/)?unity\.h$/).nil?)
-        headers_to_deep_link << annotated_header
-      end
-    end
 
     # Find which of our annotated headers are "real" dependencies. This is
     # intended to weed out dependencies that have been removed due to build
@@ -108,51 +91,63 @@ class PreprocessinatorIncludesHandler
     sdependencies.map! {|hdr| hdr.gsub('\\','/') }
     list += sdependencies
 
-    #########
-    #
-    #  NEW STUFF
-    #
-    #########
+    if @configurator.project_config_hash.has_key?(:project_auto_link_deep_dependencies) && @configurator.project_config_hash[:project_auto_link_deep_dependencies]
 
-    mocks.each do |mock|
-      dirname = File.dirname(mock)
-      basename = File.basename(mock).delete_prefix("mock_")
-      if dirname != "."
-        ignore_list << File.join(dirname, basename)
-      else
-        ignore_list << basename
+      # Creating list of mocks
+      mocks = annotated_headers.find_all do |annotated_header|
+        File.basename(annotated_header) =~ /^mock_.*$/
+      end.compact
+
+      # Creating list of headers that should be recursively pre-processed
+      # Skipping mocks and unity.h
+      headers_to_deep_link = annotated_headers.select do |annotated_header|
+        !(mocks.include? annotated_header) and (annotated_header.match(/^(.*\/)?unity\.h$/).nil?)
       end
 
-    end.compact
-
-    list = list.select do |item|
-      mocks.include? item or !(ignore_list.any? { |ignore_item| !item.match(/^(.*\/)?#{Regexp.escape(ignore_item)}$/).nil? })
-    end
-
-    include_paths = @configurator.project_config_hash[:collection_paths_include]
-    headers_to_deep_link.each do |header_to_deep_link|
-      if ignore_list.find { |ignore_header| header_to_deep_link.match(/^(.*\/)?#{Regexp.escape(ignore_header)}$/) }.nil?
-        ignore_list << header_to_deep_link
-
-        # If include header - do not pre-process
-        next if include_paths.any? {|include_path| header_to_deep_link =~ /^#{include_path}\.*/ }
-
-        # Preprocess header
-        if File.exist?(header_to_deep_link)
-          other_make_rule = self.form_shallow_dependencies_rule(header_to_deep_link)
-          other_deps, ignore_list = self.extract_shallow_includes(other_make_rule, ignore_list)
-          list += other_deps
-          list.uniq()
-          ignore_list.uniq()
+      mocks.each do |mock|
+        dirname = File.dirname(mock)
+        basename = File.basename(mock).delete_prefix("mock_")
+        if dirname != "."
+          ignore_list << File.join(dirname, basename)
+        else
+          ignore_list << basename
         end
-        # Preprocess source
-        source_file = header_to_deep_link.delete_suffix(hdr_ext) + src_ext
-        if source_file != headers_to_deep_link and File.exist?(source_file)
-          other_make_rule = self.form_shallow_dependencies_rule(source_file)
-          other_deps, ignore_list = self.extract_shallow_includes(other_make_rule, ignore_list)
-          list += other_deps
-          list.uniq()
-          ignore_list.uniq()
+
+      end.compact
+
+      # Filtering list of final includes to only include mocks and anything that is NOT in the ignore_list
+      list = list.select do |item|
+        mocks.include? item or !(ignore_list.any? { |ignore_item| !item.match(/^(.*\/)?#{Regexp.escape(ignore_item)}$/).nil? })
+      end
+
+      # Recursively processing dependency includes
+      include_paths = @configurator.project_config_hash[:collection_paths_include]
+      headers_to_deep_link.each do |header_to_deep_link|
+        if ignore_list.find { |ignore_header| header_to_deep_link.match(/^(.*\/)?#{Regexp.escape(ignore_header)}$/) }.nil?
+
+          ignore_list << header_to_deep_link
+
+          # If include header - do not pre-process
+          next if include_paths.any? {|include_path| header_to_deep_link =~ /^#{include_path}\.*/ }
+
+          # Preprocess header
+          if File.exist?(header_to_deep_link)
+            other_make_rule = self.form_shallow_dependencies_rule(header_to_deep_link)
+            other_deps, ignore_list = self.extract_shallow_includes(other_make_rule, ignore_list)
+            list += other_deps
+            list.uniq()
+            ignore_list.uniq()
+          end
+
+          # Preprocess source
+          source_file = header_to_deep_link.delete_suffix(hdr_ext) + src_ext
+          if source_file != headers_to_deep_link and File.exist?(source_file)
+            other_make_rule = self.form_shallow_dependencies_rule(source_file)
+            other_deps, ignore_list = self.extract_shallow_includes(other_make_rule, ignore_list)
+            list += other_deps
+            list.uniq()
+            ignore_list.uniq()
+          end
         end
       end
     end
