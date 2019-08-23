@@ -103,6 +103,7 @@ class PreprocessinatorIncludesHandler
       headers_to_deep_link = annotated_headers.select do |annotated_header|
         !(mocks.include? annotated_header) and (annotated_header.match(/^(.*\/)?unity\.h$/).nil?)
       end
+      headers_to_deep_link.map! {|hdr| File.expand_path(hdr)}
 
       mocks.each do |mock|
         dirname = File.dirname(mock)
@@ -112,7 +113,6 @@ class PreprocessinatorIncludesHandler
         else
           ignore_list << basename
         end
-
       end.compact
 
       # Filtering list of final includes to only include mocks and anything that is NOT in the ignore_list
@@ -122,6 +122,7 @@ class PreprocessinatorIncludesHandler
 
       # Recursively processing dependency includes
       include_paths = @configurator.project_config_hash[:collection_paths_include]
+      include_paths.map! {|path| File.expand_path(path)}
       headers_to_deep_link.each do |header_to_deep_link|
         if ignore_list.find { |ignore_header| header_to_deep_link.match(/^(.*\/)?#{Regexp.escape(ignore_header)}$/) }.nil?
 
