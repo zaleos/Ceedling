@@ -129,13 +129,13 @@ class PreprocessinatorIncludesHandler
       mocks.include? item or !(ignore_list.any? { |ignore_item| !item.match(/^(.*\/)?#{Regexp.escape(ignore_item)}$/).nil? })
     end
 
-    support_paths = @configurator.project_config_hash[:collection_paths_support]
+    include_paths = @configurator.project_config_hash[:collection_paths_include]
     headers_to_deep_link.each do |header_to_deep_link|
       if ignore_list.find { |ignore_header| header_to_deep_link.match(/^(.*\/)?#{Regexp.escape(ignore_header)}$/) }.nil?
         ignore_list << header_to_deep_link
 
-        # If support header - do not pre-process
-        next if support_paths.any? {|support_path| header_to_deep_link =~ /^#{support_path}\.*/ }
+        # If include header - do not pre-process
+        next if include_paths.any? {|include_path| header_to_deep_link =~ /^#{include_path}\.*/ }
 
         # Preprocess header
         if File.exist?(header_to_deep_link)
