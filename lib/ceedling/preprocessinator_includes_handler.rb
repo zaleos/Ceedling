@@ -52,19 +52,51 @@ class PreprocessinatorIncludesHandler
   # provided, annotated Make dependency rule.
   #
   # === Arguments
-  # +make_rule+ _String_:: Annotated Make dependency rule.
+  # +filepath+ _String_:: C source or header file to extract includes for.
   #
   # === Return
   # _Array_ of _String_:: Array of the direct dependencies for the source file.
-  def extract_shallow_includes(make_rule)
+  def extract_includes(filepath)
+    to_process = [filepath]
+    ignore_list = []
+    list = []
+
+    include_paths = @configurator.project_config_hash[:collection_paths_include]
+    include_paths.map! {|path| File.expand_path(path)}
+
+    while to_process.length > 0
+      target = to_process.shift()
+      ignore_list << target
+      # puts "[HELL] Processing: \t\t#{target}"
+      new_deps, new_to_process = extract_includes_helper(target, include_paths, ignore_list)
+      list += new_deps
+      to_process += new_to_process
+      if (!@configurator.project_config_hash.has_key?(:project_auto_link_deep_dependencies) or
+          !@configurator.project_config_hash[:project_auto_link_deep_dependencies])
+        break
+      else
+        list = list.uniq()
+        to_process = to_process.uniq()
+      end
+    end
+
+    return list
+  end
+
+  def extract_includes_helper(filepath, include_paths, ignore_list)
     # Extract the dependencies from the make rule
     hdr_ext = @configurator.extension_header
+    make_rule = self.form_shallow_dependencies_rule(filepath)
     dependencies = make_rule.split.find_all {|path| path.end_with?(hdr_ext) }.uniq
     dependencies.map! {|hdr| hdr.gsub('\\','/') }
 
     # Separate the real files form the annotated ones and remove the '@@@@'
     annotated_headers, real_headers = dependencies.partition {|hdr| hdr =~ /^@@@@/ }
     annotated_headers.map! {|hdr| hdr.gsub('@@@@','') }
+    # Matching annotated_headers values against real_headers to ensure that
+    # annotated_headers contain full path entries (as returned by make rule)
+    annotated_headers.map! {|hdr| real_headers.find {|real_hdr| !real_hdr.match(/(.*\/)?#{Regexp.escape(hdr)}/).nil? } }
+    annotated_headers = annotated_headers.compact
 
     # Find which of our annotated headers are "real" dependencies. This is
     # intended to weed out dependencies that have been removed due to build
@@ -87,7 +119,52 @@ class PreprocessinatorIncludesHandler
     sdependencies.map! {|hdr| hdr.gsub('\\','/') }
     list += sdependencies
 
-    list
+    to_process = []
+
+    if @configurator.project_config_hash.has_key?(:project_auto_link_deep_dependencies) && @configurator.project_config_hash[:project_auto_link_deep_dependencies]
+      # Creating list of mocks
+      mocks = annotated_headers.find_all do |annotated_header|
+        File.basename(annotated_header) =~ /^#{@configurator.project_config_hash[:cmock_mock_prefix]}.*$/
+      end.compact
+
+      # Creating list of headers that should be recursively pre-processed
+      # Skipping mocks and unity.h
+      headers_to_deep_link = annotated_headers.select do |annotated_header|
+        !(mocks.include? annotated_header) and (annotated_header.match(/^(.*\/)?unity\.h$/).nil?)
+      end
+      headers_to_deep_link.map! {|hdr| File.expand_path(hdr)}
+
+      mocks.each do |mock|
+        dirname = File.dirname(mock)
+        basename = File.basename(mock).delete_prefix(@configurator.project_config_hash[:cmock_mock_prefix])
+        if dirname != "."
+          ignore_list << File.join(dirname, basename)
+        else
+          ignore_list << basename
+        end
+      end.compact
+
+      # Filtering list of final includes to only include mocks and anything that is NOT in the ignore_list
+      list = list.select do |item|
+        mocks.include? item or !(ignore_list.any? { |ignore_item| !item.match(/^(.*\/)?#{Regexp.escape(ignore_item)}$/).nil? })
+      end
+
+      headers_to_deep_link.each do |hdr|
+        if (ignore_list.none? {|ignore_header| hdr.match(/^(.*\/)?#{Regexp.escape(ignore_header)}$/)} and
+            include_paths.none? {|include_path| hdr =~ /^#{include_path}\.*/})
+          if File.exist?(hdr)
+            to_process << hdr
+            source_file = hdr.delete_suffix(hdr_ext) + src_ext
+            if source_file != hdr and File.exist?(source_file)
+              to_process << source_file
+            end
+          end
+        end
+      end
+    end
+
+    return list, to_process
+
   end
 
   def write_shallow_includes_list(filepath, list)
