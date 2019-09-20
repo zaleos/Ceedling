@@ -68,6 +68,7 @@ class PreprocessinatorIncludesHandler
     list = []
 
     include_paths = @configurator.project_config_hash[:collection_paths_include]
+    include_paths = [] if include_paths.nil?
     include_paths.map! {|path| File.expand_path(path)}
 
     while to_process.length > 0
