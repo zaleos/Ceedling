@@ -2,7 +2,7 @@
 module Ceedling
   module Version
     # @private
-    GEM = "0.28.4"
+    GEM = "0.28.5-zaleos"
     # @private
     CEEDLING = GEM
     # @private
