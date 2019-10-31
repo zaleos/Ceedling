@@ -292,6 +292,10 @@ Ceedling (more on this later).
 
   Run all unit tests (rebuilding anything that's changed along the way).
 
+* `ceedling test:build_only`:
+
+  Build all unit tests, object files and executable but not run them.
+
 * `ceedling test:delta`:
 
   Run only those unit tests for which the source or test files have
@@ -524,7 +528,7 @@ void setUp(void) {}    // every test file requires this function;
                        // setUp() is called by the generated runner before each test case function
 
 void tearDown(void) {} // every test file requires this function;
-                       // tearDown() is called by the generated runner before each test case function
+                       // tearDown() is called by the generated runner after each test case function
 
 // a test case function
 void test_Foo_Function1_should_Call_Bar_AndGrill(void)
@@ -1267,6 +1271,18 @@ Example [:extension] YAML blurb
 
   **Default**: [] (empty)
 
+* `<test_name>`:
+
+  Add preprocessor definitions for specified `<test_name>`. For example:
+```yaml
+  :defines:
+    :test_foo_config:
+      - FOO_SPECIFIC_FEATURE
+```
+  `ceedling test:foo_config` will now have `FOO_SPECIFIC_FEATURE` defined, none of the other tests will.
+
+  **Default**: [] (empty)
+
 * `release`:
 
   Defines needed for the release build binary artifact.
@@ -1282,6 +1298,11 @@ Example [:extension] YAML blurb
 
   **Default**: [] (empty)
 
+* `use_test_definition`:
+
+  When this option is used the `-D<test_name>` flag is added to the build option of your test file.
+
+  **Default**: FALSE
 
 Example [:defines] YAML blurb
 
@@ -2028,6 +2049,40 @@ You can configure the module_generator to use a differect naming mechanism throu
 ```
 There are other possibilities as well (bumpy, camel, snake, caps).
 Refer to the unity module generator for more info (the unity module generator is used under the hood by module_generator).
+
+
+Boilerplate header
+-------------------------------------------
+There are two ways of adding a boilerplate header comment to your generated files:
+* With a defined string in the project.yml file:
+
+```yaml
+:module_generator:
+  :boilerplates:
+    :src: '/* This is Boilerplate code. */'
+```
+
+Using the command **ceedling module:create[foo]** it creates the source module as follows:
+
+```c
+/* This is Boilerplate code. */
+#include "foo.h"
+```
+
+It would be the same for **:tst:** and **:inc:** adding its respective options.
+
+* Defining an external file with boileplate code:
+
+```yml
+:module_generator:
+  :boilerplate_files:
+    :src: '<template_folder>\src_boilerplate.txt'
+    :inc: '<template_folder>\inc_boilerplate.txt'
+    :tst: '<template_folder>\tst_boilerplate.txt'
+```
+
+For whatever file names in whichever folder you desire.
+
 
 Advanced Topics (Coming)
 ========================

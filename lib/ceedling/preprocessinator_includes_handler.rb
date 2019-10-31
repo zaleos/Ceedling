@@ -142,7 +142,8 @@ class PreprocessinatorIncludesHandler
 
       mocks.each do |mock|
         dirname = File.dirname(mock)
-        basename = File.basename(mock).delete_prefix(@configurator.project_config_hash[:cmock_mock_prefix])
+        #basename = File.basename(mock).delete_prefix(@configurator.project_config_hash[:cmock_mock_prefix])
+        basename = File.basename(mock).sub(@configurator.project_config_hash[:cmock_mock_prefix], '')
         if dirname != "."
           ignore_list << File.join(dirname, basename)
         else
@@ -160,7 +161,8 @@ class PreprocessinatorIncludesHandler
             include_paths.none? {|include_path| hdr =~ /^#{include_path}\.*/})
           if File.exist?(hdr)
             to_process << hdr
-            source_file = hdr.delete_suffix(hdr_ext) + src_ext
+            #source_file = hdr.delete_suffix(hdr_ext) + src_ext
+            source_file = hdr.chomp(hdr_ext) + src_ext
             if source_file != hdr and File.exist?(source_file)
               to_process << source_file
             end
