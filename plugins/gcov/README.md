@@ -58,6 +58,17 @@ coverage, use the following config.
 
 These HTML and XML reports will be found in `build/artifacts/gcov`.
 
+It is possible to allow gcov to check the coverage percentage of the source
+files and exit Ceedling with an error. Use the following config; both are
+optional and are not exclusive, and can control the coverage by line or
+by branch, expressed in percentage value:
+
+```
+:gcov:
+  :fail_under_line: 85
+  :fail_under_branch: 90
+```
+
 ## Example Usage
 
 ```
