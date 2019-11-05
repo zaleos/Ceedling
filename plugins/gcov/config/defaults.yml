@@ -73,5 +73,13 @@
         - --xml
         - -r .
         - -o  "$": GCOV_ARTIFACTS_FILE_XML
+  :gcov_post_fail_under_coverage:
+    :executable: gcovr
+    :optional: TRUE
+    :arguments:
+        - -e "${1}"
+        - -r .
+        - --fail-under-line ${2}
+        - --fail-under-branch ${3}
 
 ...
