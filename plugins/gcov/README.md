@@ -58,6 +58,24 @@ coverage, use the following config.
 
 These HTML and XML reports will be found in `build/artifacts/gcov`.
 
+```
+:gcov:
+  :abort_on_uncovered: true
+```
+
+When scanning the code coverage, if any files are found that do not have
+associated coverage data, the command will abort with an error message.
+
+```
+:gcov:
+  :uncovered_ignore_list:
+    - src/foo_file.c
+    - src/bar_file.c
+```
+
+When using the ``abort_on_uncovered`` option, the files in this list will not
+trigger a failure.
+
 ## Example Usage
 
 ```
@@ -68,4 +86,4 @@ ceedling gcov:all utils:gcov
 
 - Generate overall report (combined statistics from all files with coverage)
 - Generate coverage output files
-- Easier option override for better customisation 
+- Easier option override for better customisation
