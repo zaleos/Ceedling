@@ -39,9 +39,7 @@
         - -p
         - -b
         - -e "${1}"
-        - --html
         - -r .
-        - -o GcovCoverageResults.html
   :gcov_post_report_basic:
     :executable: gcovr
     :optional: TRUE
@@ -49,9 +47,8 @@
         - -p
         - -b
         - -e "${1}"
-        - --html
         - -r .
-        - -o  "$": GCOV_ARTIFACTS_FILE
+        - --html "$": GCOV_ARTIFACTS_FILE
   :gcov_post_report_advanced:
     :executable: gcovr
     :optional: TRUE
@@ -59,10 +56,9 @@
         - -p
         - -b
         - -e "${1}"
-        - --html
-        - --html-details
         - -r .
-        - -o  "$": GCOV_ARTIFACTS_FILE
+        - --html
+        - --html-details "$": GCOV_ARTIFACTS_FILE
   :gcov_post_report_xml:
     :executable: gcovr
     :optional: TRUE
@@ -70,16 +66,7 @@
         - -p
         - -b
         - -e "${1}"
-        - --xml
         - -r .
-        - -o  "$": GCOV_ARTIFACTS_FILE_XML
-  :gcov_post_fail_under_coverage:
-    :executable: gcovr
-    :optional: TRUE
-    :arguments:
-        - -e "${1}"
-        - -r .
-        - --fail-under-line ${2}
-        - --fail-under-branch ${3}
+        - --xml "$": GCOV_ARTIFACTS_FILE_XML
 
 ...

@@ -179,29 +179,26 @@ namespace UTILS_SYM do
       xml_enabled = @ceedling[:configurator].project_config_hash[:gcov_xml_report]
     end
 
+    tool = TOOLS_GCOV_POST_REPORT
     if html_enabled
       if @ceedling[:configurator].project_config_hash[:gcov_html_report_type] == 'basic'
         puts "Creating a basic html report of gcov results in #{GCOV_ARTIFACTS_FILE}..."
-        command = @ceedling[:tool_executor].build_command_line(TOOLS_GCOV_POST_REPORT_BASIC, [], filter)
-        @ceedling[:tool_executor].exec(command[:line], command[:options])
+        tool[:arguments] = tool[:arguments] | TOOLS_GCOV_POST_REPORT_BASIC[:arguments]
       elsif @ceedling[:configurator].project_config_hash[:gcov_html_report_type] == 'detailed'
         puts "Creating a detailed html report of gcov results in #{GCOV_ARTIFACTS_FILE}..."
-        command = @ceedling[:tool_executor].build_command_line(TOOLS_GCOV_POST_REPORT_ADVANCED, [], filter)
-        @ceedling[:tool_executor].exec(command[:line], command[:options])
+        tool[:arguments] = tool[:arguments] | TOOLS_GCOV_POST_REPORT_ADVANCED[:arguments]
 
       else
         puts "In your project.yml, define: \n\n:gcov:\n  :html_report_type:\n\n to basic or detailed to refine this feature."
         puts "For now, just creating basic."
         puts "Creating a basic html report of gcov results in #{GCOV_ARTIFACTS_FILE}..."
-        command = @ceedling[:tool_executor].build_command_line(TOOLS_GCOV_POST_REPORT_BASIC, [], filter)
-        @ceedling[:tool_executor].exec(command[:line], command[:options])
+        tool[:arguments] = tool[:arguments] | TOOLS_GCOV_POST_REPORT_BASIC[:arguments]
       end
     end
 
     if xml_enabled
       puts "Creating an xml report of gcov results in #{GCOV_ARTIFACTS_FILE_XML}..."
-      command = @ceedling[:tool_executor].build_command_line(TOOLS_GCOV_POST_REPORT_XML, [], filter)
-      @ceedling[:tool_executor].exec(command[:line], command[:options])
+      tool[:arguments] = tool[:arguments] | TOOLS_GCOV_POST_REPORT_XML[:arguments]
     end
 
     fail_under_line = @ceedling[:configurator].project_config_hash[:gcov_fail_under_line] || 0
@@ -215,22 +212,24 @@ namespace UTILS_SYM do
       fail_under_branch = 0
     end
 
+    extra_params = []
     if fail_under_line + fail_under_branch > 0
       puts "Checking the minimum coverage: #{fail_under_line}% by line and #{fail_under_branch}% by branch"
-      command = @ceedling[:tool_executor].build_command_line(TOOLS_GCOV_POST_FAIL_UNDER_COVERAGE, [], filter, fail_under_line, fail_under_branch)
+      extra_params << "--fail-under-line" << fail_under_line << "--fail-under-branch" << fail_under_branch
+    end
 
-      begin
-        @ceedling[:tool_executor].exec(command[:line], command[:options])
-      rescue
-        exitstatus = $?.exitstatus
-        if exitstatus & 2 == 2
-          puts "The line coverage is less than the minimum #{fail_under_line}%"
-        end
-        if exitstatus & 4 == 4
-          puts "The branch coverage is less than the minimum #{fail_under_branch}%"
-        end
-        exit(exitstatus)
+    begin
+      command = @ceedling[:tool_executor].build_command_line(tool, extra_params, filter)
+      @ceedling[:tool_executor].exec(command[:line], command[:options])
+    rescue
+      exitstatus = $?.exitstatus
+      if exitstatus & 2 == 2
+        puts "The line coverage is less than the minimum #{fail_under_line}%"
       end
+      if exitstatus & 4 == 4
+        puts "The branch coverage is less than the minimum #{fail_under_branch}%"
+      end
+      exit(exitstatus)
     end
 
     puts "Done."
