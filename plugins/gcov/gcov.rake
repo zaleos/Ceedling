@@ -205,7 +205,16 @@ namespace UTILS_SYM do
     end
 
     fail_under_line = @ceedling[:configurator].project_config_hash[:gcov_fail_under_line] || 0
+    if fail_under_line < 0 || fail_under_line > 100
+      puts "Minimum coverage by line (#{fail_under_line}%) has to be a percentage from 0 to 100."
+      fail_under_line = 0
+    end
     fail_under_branch = @ceedling[:configurator].project_config_hash[:gcov_fail_under_branch] || 0
+    if fail_under_branch < 0 || fail_under_branch > 100
+      puts "Minimum coverage by branch (#{fail_under_branch}%) has to be a percentage from 0 to 100."
+      fail_under_branch = 0
+    end
+
     if fail_under_line + fail_under_branch > 0
       puts "Checking the minimum coverage: #{fail_under_line}% by line and #{fail_under_branch}% by branch"
       command = @ceedling[:tool_executor].build_command_line(TOOLS_GCOV_POST_FAIL_UNDER_COVERAGE, [], filter, fail_under_line, fail_under_branch)
