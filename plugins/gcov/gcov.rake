@@ -213,7 +213,14 @@ namespace UTILS_SYM do
       begin
         @ceedling[:tool_executor].exec(command[:line], command[:options])
       rescue
-        exit($?.exitstatus)
+        exitstatus = $?.exitstatus
+        if exitstatus & 2 == 2
+          puts "The line coverage is less than the minimum #{fail_under_line}%"
+        end
+        if exitstatus & 4 == 4
+          puts "The branch coverage is less than the minimum #{fail_under_branch}%"
+        end
+        exit(exitstatus)
       end
     end
 
