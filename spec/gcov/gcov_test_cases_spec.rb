@@ -46,7 +46,7 @@ module GcovTestCases
   def can_test_projects_with_gcov_with_fail_because_of_uncovered_files
     @c.with_context do
       Dir.chdir @proj_name do
-        FileUtils.cp test_asset_path("project_with_guts_gcov_abortonfail.yml"), "project.yml"
+        FileUtils.cp test_asset_path("project_with_guts_gcov_abortonuncovered.yml"), "project.yml"
         FileUtils.cp test_asset_path("example_file.h"), 'src/'
         FileUtils.cp test_asset_path("example_file.c"), 'src/'
         FileUtils.cp test_asset_path("uncovered_example_file.c"), 'src/'
@@ -65,7 +65,7 @@ module GcovTestCases
   def can_test_projects_with_gcov_with_success_because_of_ignore_uncovered_list
     @c.with_context do
       Dir.chdir @proj_name do
-        FileUtils.cp test_asset_path("project_with_guts_gcov_abortonfail.yml"), "project.yml"
+        FileUtils.cp test_asset_path("project_with_guts_gcov_abortonuncovered.yml"), "project.yml"
         FileUtils.cp test_asset_path("example_file.h"), "src/"
         FileUtils.cp test_asset_path("example_file.c"), "src/"
         FileUtils.cp test_asset_path("uncovered_example_file.c"), "src/foo_file.c"
