@@ -68,7 +68,7 @@ module GcovTestCases
         FileUtils.cp test_asset_path("project_with_guts_gcov_abortonuncovered.yml"), "project.yml"
         FileUtils.cp test_asset_path("example_file.h"), "src/"
         FileUtils.cp test_asset_path("example_file.c"), "src/"
-        FileUtils.cp test_asset_path("uncovered_example_file.c"), "src/foo_file.c"
+        FileUtils.cp test_asset_path("uncovered_example_file.c"), "src/foo_file.c" # "src/foo_file.c" is in the ignore uncovered list
         FileUtils.cp test_asset_path("test_example_file_success.c"), "test/"
 
         output = `bundle exec ruby -S ceedling gcov:all 2>&1`
