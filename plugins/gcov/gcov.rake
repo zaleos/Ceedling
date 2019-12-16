@@ -201,21 +201,23 @@ namespace UTILS_SYM do
       tool[:arguments] = tool[:arguments] | TOOLS_GCOV_POST_REPORT_XML[:arguments]
     end
 
+    extra_params = []
     fail_under_line = @ceedling[:configurator].project_config_hash[:gcov_fail_under_line] || 0
     if fail_under_line < 0 || fail_under_line > 100
       puts "Minimum coverage by line (#{fail_under_line}%) has to be a percentage from 0 to 100."
       fail_under_line = 0
+    elsif fail_under_line > 0
+      puts "Checking the minimum coverage by line: #{fail_under_line}%"
+      extra_params << "--fail-under-line" << fail_under_line
     end
+
     fail_under_branch = @ceedling[:configurator].project_config_hash[:gcov_fail_under_branch] || 0
     if fail_under_branch < 0 || fail_under_branch > 100
       puts "Minimum coverage by branch (#{fail_under_branch}%) has to be a percentage from 0 to 100."
       fail_under_branch = 0
-    end
-
-    extra_params = []
-    if fail_under_line + fail_under_branch > 0
-      puts "Checking the minimum coverage: #{fail_under_line}% by line and #{fail_under_branch}% by branch"
-      extra_params << "--fail-under-line" << fail_under_line << "--fail-under-branch" << fail_under_branch
+    elsif fail_under_branch > 0
+      puts "Checking the minimum coverage by branch: #{fail_under_branch}%"
+      extra_params << "--fail-under-branch" << fail_under_branch
     end
 
     begin
