@@ -214,9 +214,9 @@ General notes:
    and Rakefiles, consult the [Rake tutorial, examples, and
    user guide](http://rubyrake.org/).
 
-4. When using Ceedling in Windows environments, a test file name may 
-   not include the sequences “patch” or “setup”. The Windows Installer 
-   Detection Technology (part of UAC), requires administrator 
+4. When using Ceedling in Windows environments, a test file name may
+   not include the sequences “patch” or “setup”. The Windows Installer
+   Detection Technology (part of UAC), requires administrator
    privileges to execute file names with these strings.
 
 Now What? How Do I Make It GO?
@@ -259,7 +259,7 @@ Ceedling (more on this later).
 * `ceedling environment`:
 
   List all configured environment variable names and string values. This
-  task is helpful in verifying the evaluatio of any Ruby expressions in
+  task is helpful in verifying the evaluation of any Ruby expressions in
   the [:environment] section of your config file.`: Note: Ceedling may
   set some convenience environment variables by default.
 
@@ -271,7 +271,7 @@ Ceedling (more on this later).
   specified in the [:paths] section of your config file.
 
 * `ceedling files:assembly`
-* `ceedling files:header`
+* `ceedling files:include`
 * `ceedling files:source`
 * `ceedling files:test`
 
@@ -285,7 +285,7 @@ Ceedling (more on this later).
   Load and merge configuration settings into the main project
   configuration. Each task is named after a *.yml file found in the
   configured options directory. See documentation for the configuration
-  setting [:project][:options_path] and for options files in advanced
+  setting [:project][:options_paths] and for options files in advanced
   topics.
 
 * `ceedling test:all`:
@@ -1300,7 +1300,7 @@ Example [:extension] YAML blurb
 
 * `use_test_definition`:
 
-  When this option is used the `-D<test_name>` flag is added to the build option of your test file.
+  When this option is used the `-D<test_name>` flag is added to the build option.
 
   **Default**: FALSE
 
@@ -1340,7 +1340,9 @@ configuration. In this section, you can optionally have the following subsection
 * `system`:
 
   These libraries are assumed to be in the tool path somewhere and shouldn't need to be
-  specified. The libraries added here will be injected into releases and tests.
+  specified. The libraries added here will be injected into releases and tests. For example
+  if you specify `-lm` you can include the math library. The `-l` portion is only necessary
+  if the `:flag` prefix below doesn't specify it already for you other libraries.
 
 * `flag`:
 
@@ -1414,6 +1416,22 @@ Example [:flags] YAML blurb
         - --baz
 ```
 
+**import**: Load additional config files
+
+In some cases it is nice to have config files (project.yml, options files) which can
+load other config files, for commonly re-used definitions (target processor,
+common code modules, etc).
+
+These can be recursively nested, the included files can include other files.
+
+Example [:import] YAML blurb
+
+```yaml
+:import:
+  - path/to/config.yml
+  - path/to/another/config.yml
+```
+
 Ceedling sets values for a subset of CMock settings. All CMock
 options are available to be set, but only those options set by
 Ceedling in an automated fashion are documented below. See CMock
@@ -1459,6 +1477,9 @@ Ceedling sets values for a subset of CMock settings. All CMock options are avail
   provides CMock, simply add [:cmock][:plugins] to your configuration
   and specify your desired additional plugins.
 
+  Each of the plugins have their own additional documentation.
+
+
 * `includes`:
 
   If [:cmock][:unity_helper] set, pre-populated with unity_helper file
@@ -1499,7 +1520,7 @@ by overriding the value in the Ceedling YAML configuration file.
   List of conditional compilation symbols used to configure Unity's
   features in its source and header files. See Unity documentation to
   understand available options. No symbols must be set unless the
-  defaults are inappropriate for your specific environment. Most Unity 
+  defaults are inappropriate for your specific environment. Most Unity
   defines can be easily configured through the YAML file.
 
   **Default**: [] (empty)
@@ -1539,10 +1560,10 @@ Notes on Unity configuration:
   that routine, you can replace `putchar()` calls in Unity by overriding
   the function-like macro `UNITY_OUTPUT_CHAR`. Consult your toolchain
   and shell documentation. Eventhough this can also be defined in the YAML file
-  most shell environments do not handle parentheses as command line arguments 
-  very well. To still be able to add this functionality all necessary 
-  options can be defined in the `unity_config.h`. Unity needs to be told to look for 
-  the `unity_config.h` in the YAML file, though. 
+  most shell environments do not handle parentheses as command line arguments
+  very well. To still be able to add this functionality all necessary
+  options can be defined in the `unity_config.h`. Unity needs to be told to look for
+  the `unity_config.h` in the YAML file, though.
 
 Example [:unity] YAML blurbs
 ```yaml
@@ -1669,6 +1690,10 @@ A Ceedling tool has a handful of configurable elements:
 5. [:background_exec] - Control execution as background process
    {:none, :auto, :win, :unix}.
    Defaults to :none if unspecified.
+
+6. [:optional] - By default a tool is required for operation, which
+   means tests will be aborted if the tool is not present. However, 
+   you can set this to `TRUE` if it's not needed for testing.
 
 
 Tool Element Runtime Substitution
@@ -1876,7 +1901,7 @@ Notes:
 * `COLLECTION_DEFINES_RELEASE_AND_VENDOR`:
 
   All symbols specified in [:defines][:release] plus symbols defined by
-[:cexception][:defines] if exceptions are ena bled
+[:cexception][:defines] if exceptions are enabled
 
 
 Notes:
