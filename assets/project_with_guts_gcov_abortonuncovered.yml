@@ -16,10 +16,6 @@
   :default_tasks:
     - test:all
 
-#:release_build:
-#  :output: MyApp.out
-#  :use_assembly: FALSE
-
 :environment:
 
 :extension:
