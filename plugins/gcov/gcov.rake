@@ -198,7 +198,19 @@ namespace UTILS_SYM do
     args += "-j #{gcovr_opts[:num_parallel_threads]} " if !(gcovr_opts[:num_parallel_threads].nil?) && (gcovr_opts[:num_parallel_threads].is_a? Integer)
 
     [:fail_under_line, :fail_under_branch, :source_encoding, :object_directory].each do |opt|
-      args += "--#{opt.to_s.gsub('_','-')} #{gcovr_opts[opt]} " unless gcovr_opts[opt].nil?
+      unless gcovr_opts[opt].nil?
+        value = gcovr_opts[opt]
+        if opt == :fail_under_line || opt == :fail_under_branch
+          if not value.is_a? Integer
+            puts "Option value #{opt} has to be an integer"
+            value = nil
+          elsif value < 0 || value > 100
+            puts "Option value #{opt} has to be a percentage from 0 to 100."
+            value = nil
+          end
+        end
+        args += "--#{opt.to_s.gsub('_','-')} #{value} " unless value.nil?
+      end
     end
 
     return args
