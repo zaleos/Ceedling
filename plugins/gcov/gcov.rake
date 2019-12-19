@@ -398,10 +398,10 @@ namespace UTILS_SYM do
   # Show more human-friendly message on gcovr return code
   def show_gcovr_msg(exitcode)
     if exitcode & 2 == 2
-      puts "The line coverage is less than the minimum."
+      @ceedling[:streaminator].stderr_puts("The line coverage is less than the minimum.")
     end
     if exitcode & 4 == 4
-      puts "The branch coverage is less than the minimum."
+      @ceedling[:streaminator].stderr_puts("The branch coverage is less than the minimum.")
     end
   end
 
