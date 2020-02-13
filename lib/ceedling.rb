@@ -61,6 +61,7 @@ module Ceedling
 
     # Define the root of the project if specified
     Object.const_set('PROJECT_ROOT', options[:root]) if options.has_key? :root
+    puts "[TOBY] ceedling.rb - load_project"
 
     # Load ceedling
     load "#{self.rakefile}"

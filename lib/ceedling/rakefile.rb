@@ -1,5 +1,7 @@
 require 'fileutils'
 
+puts "[TOBY] lib/ceedling/rakefile start"
+
 # get directory containing this here file, back up one directory, and expand to full path
 CEEDLING_ROOT    = File.expand_path(File.dirname(__FILE__) + '/../..')
 CEEDLING_LIB     = File.join(CEEDLING_ROOT, 'lib')
@@ -29,7 +31,9 @@ require 'ceedling/target_loader'
 lib_ceedling_load_path_temp = File.join(CEEDLING_LIB, 'ceedling')
 $LOAD_PATH.unshift( lib_ceedling_load_path_temp )
 @ceedling = DIY::Context.from_yaml( File.read( File.join(lib_ceedling_load_path_temp, 'objects.yml') ) )
+puts "[TOBY] lib/ceedling/rakefile <@ceedling.build_everything> {{{"
 @ceedling.build_everything
+puts "[TOBY] lib/ceedling/rakefile </@ceedling.build_everything> }}}"
 # now that all objects are built, delete 'lib/ceedling' from load path
 $LOAD_PATH.delete(lib_ceedling_load_path_temp)
 # one-stop shopping for all our setup and such after construction
@@ -49,7 +53,10 @@ project_config =
 
 
 # tell all our plugins we're about to do something
+puts "[TOBY] lib/ceedling/rakefile <pre_build> {{{"
 @ceedling[:plugin_manager].pre_build
+puts "[TOBY] lib/ceedling/rakefile </pre_build> }}}"
+
 
 # load rakefile component files (*.rake)
 PROJECT_RAKEFILE_COMPONENT_FILES.each { |component| load(component) }
@@ -76,8 +83,10 @@ END {
   if (@ceedling[:system_wrapper].ruby_success)
 
     # tell all our plugins the build is done and process results
+    puts "[TOBY] lib/ceedling/rakefile <post build> {{{"
     @ceedling[:plugin_manager].post_build
     @ceedling[:plugin_manager].print_plugin_failures
+    puts "[TOBY] lib/ceedling/rakefile </post build> }}}"
     exit(1) if (@ceedling[:plugin_manager].plugins_failed? && !@ceedling[:setupinator].config_hash[:graceful_fail])
   else
     puts "ERROR: Ceedling Failed"
