@@ -44,6 +44,9 @@ class GeneratorTestRunner
   def generate(module_name, runner_filepath, test_cases, mock_list, test_file_includes=[])
     require 'generate_test_runner.rb'
 
+    puts "[TOBY] <generate_test_runner 1> {{{"
+
+
     #actually build the test runner using Unity's test runner generator
     #(there is no need to use preprocessor here because we've already looked up test cases and are passing them in here)
     @test_runner_generator ||= UnityTestRunnerGenerator.new( @configurator.get_runner_config )
@@ -52,5 +55,6 @@ class GeneratorTestRunner
                                      test_cases,
                                      mock_list,
                                      test_file_includes)
+    puts "[TOBY] </generate_test_runner 1> }}}"
   end
 end
