@@ -26,6 +26,7 @@ rule(/#{BULLSEYE_BUILD_OUTPUT_PATH}\/#{'.+\\'+EXTENSION_OBJECT}$/ => [
       @ceedling[:file_path_utils].form_test_build_list_filepath(object.name)
     )
   else
+    puts "[TOBY] XXX What is this bullseye stuff???"
     @ceedling[BULLSEYE_SYM].generate_coverage_object_file(object.source, object.name)
   end
 

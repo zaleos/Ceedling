@@ -16,7 +16,9 @@ rule(/#{GCOV_BUILD_OUTPUT_PATH}\/#{'.+\\' + EXTENSION_OBJECT}$/ => [
        end
      ]) do |object|
 
+  puts "[TOBY] <gcov.rake.generate.obj.file> {{{"
   if File.basename(object.source) =~ /^(#{PROJECT_TEST_FILE_PREFIX}|#{CMOCK_MOCK_PREFIX})|(#{VENDORS_FILES.map{|source| '\b' + source + '\b'}.join('|')})/
+    puts "[TOBY] Path1"
     @ceedling[:generator].generate_object_file(
       TOOLS_GCOV_COMPILER,
       OPERATION_COMPILE_SYM,
@@ -26,11 +28,14 @@ rule(/#{GCOV_BUILD_OUTPUT_PATH}\/#{'.+\\' + EXTENSION_OBJECT}$/ => [
       @ceedling[:file_path_utils].form_test_build_list_filepath(object.name)
     )
   else
+    puts "[TOBY] Path2"
     @ceedling[GCOV_SYM].generate_coverage_object_file(object.source, object.name)
   end
+  puts "[TOBY] </gcov.rake.generate.obj.file> }}}"
 end
 
 rule(/#{GCOV_BUILD_OUTPUT_PATH}\/#{'.+\\' + EXTENSION_EXECUTABLE}$/) do |bin_file|
+  puts "[TOBY] <gcov.rake.generate.exe.file> {{{"
   lib_args = @ceedling[:test_invoker].convert_libraries_to_arguments()
 
   @ceedling[:generator].generate_executable_file(
@@ -41,6 +46,7 @@ rule(/#{GCOV_BUILD_OUTPUT_PATH}\/#{'.+\\' + EXTENSION_EXECUTABLE}$/) do |bin_fil
     lib_args,
     @ceedling[:file_path_utils].form_test_build_map_filepath(bin_file.name)
   )
+  puts "[TOBY] </gcov.rake.generate.exe.file> }}}"
 end
 
 rule(/#{GCOV_RESULTS_PATH}\/#{'.+\\' + EXTENSION_TESTPASS}$/ => [
@@ -56,6 +62,7 @@ rule(/#{GCOV_DEPENDENCIES_PATH}\/#{'.+\\' + EXTENSION_DEPENDENCIES}$/ => [
          @ceedling[:file_finder].find_compilation_input_file(task_name)
        end
      ]) do |dep|
+  puts "[TOBY] <generate_dependencies_file> {{{"
   @ceedling[:generator].generate_dependencies_file(
     TOOLS_TEST_DEPENDENCIES_GENERATOR,
     GCOV_SYM,
@@ -63,6 +70,7 @@ rule(/#{GCOV_DEPENDENCIES_PATH}\/#{'.+\\' + EXTENSION_DEPENDENCIES}$/ => [
     File.join(GCOV_BUILD_OUTPUT_PATH, File.basename(dep.source).ext(EXTENSION_OBJECT)),
     dep.name
   )
+  puts "[TOBY] </generate_dependencies_file> }}}"
 end
 
 task directories: [GCOV_BUILD_OUTPUT_PATH, GCOV_RESULTS_PATH, GCOV_DEPENDENCIES_PATH, GCOV_ARTIFACTS_PATH]
